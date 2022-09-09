@@ -19,18 +19,21 @@ class CryptoDetailViewModel @Inject constructor(
 
     private val _state = mutableStateOf(CryptoDetailState())
     val state:State<CryptoDetailState> = _state
+    var isLoadingInitial=mutableStateOf(true)
 
 
     fun getCryptoDetail(symbol:String){
         cryptoDetailUseCase(symbol).onEach { result ->
             when(result){
                 is Resource.Success ->{
+                    isLoadingInitial.value=false
                     _state.value=CryptoDetailState(
                         cryptoDetail = result.data?: CryptoDetail(),
 
                     )
                 }
                 is Resource.Error -> {
+                    isLoadingInitial.value=false
                     _state.value=CryptoDetailState(
                     error=result.message?:"An UnExpected error Occured")
                 }

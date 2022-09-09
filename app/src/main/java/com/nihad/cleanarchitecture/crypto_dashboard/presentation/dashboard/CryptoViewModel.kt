@@ -30,13 +30,14 @@ class CryptoViewModel @Inject constructor(
 
     var stateEvent=MutableLiveData(CRYPTO_API_STATE.ACTIVE)
 
+    var isLoadingInitial=mutableStateOf(true)
 
     init {
-        getCryptoList()
+
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun getCryptoList() {
+     fun getCryptoList() {
 
 
         viewModelScope.launch {
@@ -62,31 +63,35 @@ class CryptoViewModel @Inject constructor(
                             }
 
 
-                        } catch (E: Exception) {
-
+                        } catch (e: Exception) {
+                            send(element = Resource.Error(e.localizedMessage ?: "Unexpected error Occured"))
 
                         }
                     }
-                    delay(5000)
+                    delay(10000)
                 }
 
             }.flowOn(Dispatchers.IO).collect { result ->
                 when (result) {
                     is Resource.Success -> {
+                        isLoadingInitial.value=false
                         _state.value = CryptoState(
                             cryptoList = result.data ?: emptyList(),
 
                             )
                     }
                     is Resource.Error -> {
+                        isLoadingInitial.value=false
                         _state.value = CryptoState(
                             error = result.message ?: "An UnExpected error Occured"
                         )
                     }
                     is Resource.Loading -> {
-                        _state.value =_state.value.copy().apply {
-                            isLoading=true
-                        }
+                        _state.value =CryptoState(
+                            isLoading = true,
+                            cryptoList = _state.value.cryptoList,
+                            error=""
+                        )
                     }
                 }
 
